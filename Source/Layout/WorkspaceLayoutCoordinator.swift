@@ -156,14 +156,27 @@ open class WorkspaceLayoutCoordinator: NSObject {
    change.
 
    - parameter connection: The connection to be disconnected.
+   - parameter healStack: `true` if the children of the block being disconnected should be restored
+     to the parent of the block being disconnected. `false` otherwise. Defaults to `false`.
    */
-  open func disconnect(_ connection: Connection) {
+  open func disconnect(_ connection: Connection, healStack: Bool = false) {
     let oldTarget = connection.targetConnection
     connection.disconnect()
 
     didChangeTarget(forConnection: connection, oldTarget: oldTarget)
     if let oldTarget = oldTarget {
-      didChangeTarget(forConnection: oldTarget, oldTarget: connection)
+      // If we need to heal the stack, and disconnecting a previous connection with a connected
+      // next connection, hook the next connection up to the old previous connection.
+      if healStack &&
+        connection.sourceBlock.nextConnection != connection &&
+        (connection.sourceBlock.nextConnection?.connected)!
+      {
+        let otherConnection = (connection.sourceBlock.nextConnection?.targetConnection)!
+        disconnect(otherConnection, healStack: false)
+        try? connect(oldTarget, otherConnection)
+      } else {
+        didChangeTarget(forConnection: oldTarget, oldTarget: connection)
+      }
     }
   }
 

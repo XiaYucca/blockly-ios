@@ -113,8 +113,7 @@ public final class FieldVariable: Field {
 
 extension FieldVariable: NameManagerListener {
   public func nameManager(_ nameManager: NameManager, shouldRemoveName name: String) -> Bool {
-    // Only approve this removal if this instance isn't using that variable
-    return !nameManager.namesAreEqual(variable, name)
+    return true
   }
 
   public func nameManager(
